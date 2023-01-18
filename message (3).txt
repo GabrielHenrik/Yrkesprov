@@ -1,0 +1,87 @@
+$source = 'https://www.avoindata.fi/data/dataset/d203038a-fa46-40b8-80b4-33479bf64412/resource/a71df935-054d-4e83-8e07-e2e15f6224ed/download/ostolaskudata-2021-porvoon-kaupunki.csv'
+#källan, altså linken till infon filen man vill ha ner laddad
+$destination = 'C:\powershell\avoin.csv'
+#vart man vill att filen skall sparas
+$csvpath = "C:\powershell\avoin.csv"
+$csvdelimiter = ";"
+
+Invoke-WebRequest -Uri $source -OutFile $destination
+#säger åt powershell att ta infon från den här sidan och sätt det på den här platsen
+
+$MyPath = "C:\powershell\avoin.csv"
+Get-ChildItem -Path $sourcedir -Filter *.txt | ForEach-Object {
+
+# This variable can be reused
+$utf8 = New-Object System.Text.UTF8Encoding $false
+
+$MyFile = Get-Content $destination -Raw
+Set-Content -Value $utf8.GetBytes($MyFile) -Encoding Byte -Path $destination
+}
+
+$file = Import-CSV -Path  $csvpath -Delimiter $csvDelimiter
+
+#importerar information in till powershell så man kan läsa och använda det
+
+$Database = "C:\powershell\avoin.db"
+
+$kustid = $file.kustannuspaikka
+$kustname = $file."kustannuspaikan nimi"
+$tositenum = $file.tositenumero
+$tositename = $file.tositelaji
+$brutto = $file."EUR, brutto"
+$rondo = $file."Rondo ID"
+
+#$kustn = ConvertFrom-StringData -stringdata $kustname -delimiter ","
+
+$hash = @{kustid = $kustid; kustname = $kustname;tositenum = $tositenum; tositename = $tositename; brutto = $brutto; rondo = $rondo }
+
+#$decimal = "decimal(10,2)"
+
+$Query = "CREATE TABLE avoin (id INTEGER PRIMARY KEY, 
+
+                               kustannus_id INTEGER,
+
+                               kustannus_name text,
+
+                               tosite_number INTEGER,
+
+                               tositename text,
+
+                               euro_brutto REAL,
+
+                               rondo_id INTEGER 
+
+                               );"
+
+
+
+
+
+Invoke-SqliteQuery -Query $Query -DataSource $Database
+
+#$bronto = $brottu = $hash.brutto -replace ",","." -replace " ",""
+#$bronto -replace " ",""
+
+0..$kustid.count | ForEach-Object{
+    #$kustid.count 
+
+    
+    $mangd = $_
+
+    $kid = $hash.kustid[$mangd]
+    $kname = $hash.kustname[$mangd]
+    $tnum = $hash.tositenum[$mangd]
+    $tname = $hash.tositename[$mangd]
+    $bronto = $hash.brutto[$mangd] -replace ",","." -replace " ",""
+    #$bronto[$mangd]
+    $rnd = $hash.rondo[$mangd]
+
+    $Query = "INSERT INTO avoin (kustannus_id, kustannus_name, tosite_number, tositename, euro_brutto, rondo_id) VALUES ('$kid', '$kname', '$tnum', '$tname', '$bronto', '$rnd');"
+
+        Invoke-SqliteQuery -Query $Query -DataSource $Database
+
+
+
+    }
+    $readit = Invoke-SqliteQuery -Query "select * from avoin;" -DataSource $Database
+    $readit
