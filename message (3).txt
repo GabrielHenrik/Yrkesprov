@@ -1,28 +1,20 @@
 $source = 'https://www.avoindata.fi/data/dataset/d203038a-fa46-40b8-80b4-33479bf64412/resource/a71df935-054d-4e83-8e07-e2e15f6224ed/download/ostolaskudata-2021-porvoon-kaupunki.csv'
 #källan, altså linken till infon filen man vill ha ner laddad
-$destination = 'C:\powershell\avoin.csv'
+$destination = '/home/kenny/Documents/yrkesprov/avoin.csv'
 #vart man vill att filen skall sparas
-$csvpath = "C:\powershell\avoin.csv"
+$csvpath = "/home/kenny/Documents/yrkesprov/avoin.csv"
 $csvdelimiter = ";"
 
 Invoke-WebRequest -Uri $source -OutFile $destination
 #säger åt powershell att ta infon från den här sidan och sätt det på den här platsen
 
-$MyPath = "C:\powershell\avoin.csv"
-Get-ChildItem -Path $sourcedir -Filter *.txt | ForEach-Object {
 
-# This variable can be reused
-$utf8 = New-Object System.Text.UTF8Encoding $false
 
-$MyFile = Get-Content $destination -Raw
-Set-Content -Value $utf8.GetBytes($MyFile) -Encoding Byte -Path $destination
-}
-
-$file = Import-CSV -Path  $csvpath -Delimiter $csvDelimiter
+$file = Import-CSV -Path  $csvpath -Delimiter $csvDelimiter -Encoding utf7
 
 #importerar information in till powershell så man kan läsa och använda det
 
-$Database = "C:\powershell\avoin.db"
+$Database = "/home/kenny/Documents/yrkesprov/avoin.db"
 
 $kustid = $file.kustannuspaikka
 $kustname = $file."kustannuspaikan nimi"
